@@ -1,0 +1,69 @@
+import os
+import tempfile
+from google.cloud import storage
+from typing import List, Dict, Tuple
+
+class GCSHandler:
+    def __init__(self, bucket_name: str):
+        self.bucket_name = bucket_name
+        self.storage_client = storage.Client()
+        self.bucket = self.storage_client.bucket(self.bucket_name)
+
+    def list_files_in_prefix(self, prefix: str) -> List[str]:
+        """
+        Lists all blob names (file paths) within a given GCS prefix.
+        Args:
+            prefix: The GCS prefix (folder path, e.g., 'test_audio_files/shardul_test/interview_abc/').
+        Returns:
+            A list of blob names (relative paths within the bucket).
+        """
+        blobs = self.storage_client.list_blobs(self.bucket_name, prefix=prefix)
+        file_names = [blob.name for blob in blobs if not blob.name.endswith('/')] # Exclude folders
+        return file_names
+
+    def download_file(self, gcs_file_path: str, local_destination_path: str):
+        """
+        Downloads a file from GCS to a specified local path.
+        Args:
+            gcs_file_path: The full GCS path of the file (e.g., 'test_audio_files/shardul_test/interview_abc/reference_natural.wav').
+            local_destination_path: The local path where the file should be saved.
+        """
+        blob = self.bucket.blob(gcs_file_path)
+        try:
+            blob.download_to_filename(local_destination_path)
+            print(f"Downloaded {gcs_file_path} to {local_destination_path}")
+        except Exception as e:
+            print(f"Error downloading {gcs_file_path}: {e}")
+            raise
+
+    # RENAMED AND MODIFIED THIS METHOD
+    def download_folder_to_local_directory(self, gcs_folder_prefix: str, local_destination_dir: str) -> List[str]:
+        """
+        Downloads all files from a specific GCS folder (prefix) to a specified local directory.
+        Args:
+            gcs_folder_prefix: The GCS prefix representing the folder (e.g., 'test_audio_files/shardul_test/interview_abc/').
+                                Make sure it ends with a '/' if it's a folder.
+            local_destination_dir: The local path where the files should be saved.
+        Returns:
+            A list of paths to the downloaded local files.
+        """
+        if not os.path.isdir(local_destination_dir):
+            raise ValueError(f"Local destination directory does not exist or is not a directory: {local_destination_dir}")
+
+        print(f"Downloading files from GCS prefix '{gcs_folder_prefix}' to local directory '{local_destination_dir}'")
+        
+        blobs = self.storage_client.list_blobs(self.bucket_name, prefix=gcs_folder_prefix)
+        
+        downloaded_paths = []
+        for blob in blobs:
+            # Skip directories (blobs ending with '/')
+            if blob.name.endswith('/'):
+                continue
+
+            local_file_name = os.path.basename(blob.name)
+            local_file_path = os.path.join(local_destination_dir, local_file_name)
+            
+            self.download_file(blob.name, local_file_path)
+            downloaded_paths.append(local_file_path)
+            
+        return downloaded_paths

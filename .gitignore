@@ -1,0 +1,17 @@
+# Environment variables
+.env
+
+# Python cache
+__pycache__/
+
+# Virtual environment
+ai-fraud-env/
+
+# Credentials
+keyfile.json
+
+# Generated outputs (optional - remove this line if you want to track outputs)
+outputs/
+
+# Test data (optional - remove this line if you want to track test data)
+test_data/ 
