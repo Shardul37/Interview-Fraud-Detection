@@ -1,3 +1,4 @@
+# app/services/gcs_handler.py
 import os
 import tempfile
 from google.cloud import storage
@@ -31,12 +32,11 @@ class GCSHandler:
         blob = self.bucket.blob(gcs_file_path)
         try:
             blob.download_to_filename(local_destination_path)
-            print(f"Downloaded {gcs_file_path} to {local_destination_path}")
+            # print(f"Downloaded {gcs_file_path} to {local_destination_path}") # Removed print for less verbosity
         except Exception as e:
             print(f"Error downloading {gcs_file_path}: {e}")
             raise
 
-    # RENAMED AND MODIFIED THIS METHOD
     def download_folder_to_local_directory(self, gcs_folder_prefix: str, local_destination_dir: str) -> List[str]:
         """
         Downloads all files from a specific GCS folder (prefix) to a specified local directory.
@@ -56,7 +56,6 @@ class GCSHandler:
         
         downloaded_paths = []
         for blob in blobs:
-            # Skip directories (blobs ending with '/')
             if blob.name.endswith('/'):
                 continue
 
@@ -67,3 +66,24 @@ class GCSHandler:
             downloaded_paths.append(local_file_path)
             
         return downloaded_paths
+
+    def delete_folder_by_prefix(self, gcs_folder_prefix: str):
+        """
+        Deletes all blobs (files) within a given GCS prefix (acting like a folder).
+        Args:
+            gcs_folder_prefix: The GCS prefix representing the folder to delete (e.g., 'test_extracted_audio/interview_abc/').
+                                Make sure it ends with a '/' to ensure it only deletes contents *within* that 'folder'.
+        """
+        print(f"Attempting to delete files under GCS prefix: gs://{self.bucket_name}/{gcs_folder_prefix}")
+        blobs_to_delete = self.storage_client.list_blobs(self.bucket_name, prefix=gcs_folder_prefix)
+        
+        delete_count = 0
+        for blob in blobs_to_delete:
+            if not blob.name.endswith('/'): 
+                try:
+                    blob.delete()
+                    print(f"Deleted: gs://{self.bucket_name}/{blob.name}")
+                    delete_count += 1
+                except Exception as e:
+                    print(f"Error deleting {blob.name}: {e}")
+        print(f"Finished attempting to delete {delete_count} files under prefix {gcs_folder_prefix}.")

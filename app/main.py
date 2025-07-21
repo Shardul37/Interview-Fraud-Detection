@@ -1,15 +1,12 @@
-# NEW: Import dotenv and call load_dotenv() at the very beginning
+# app/main.py
 from dotenv import load_dotenv
-load_dotenv() # This must be called BEFORE any other imports that rely on env vars
+load_dotenv() 
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from app.api.endpoints import router
-
-# NEW: Import dotenv for loading .env file in local development
-from dotenv import load_dotenv
-load_dotenv() # This loads environment variables from a .env file if it exists
+from app.services.audio_processor import audio_service # Access the initialized service
 
 app = FastAPI(
     title="AI Fraud Detection API",
@@ -36,6 +33,12 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup resources on application shutdown."""
+    print("Shutting down FastAPI app. Cleaning up resources...")
+    audio_service.cleanup() # This will close MongoDB client too
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

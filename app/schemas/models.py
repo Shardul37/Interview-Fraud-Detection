@@ -1,6 +1,16 @@
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 from datetime import datetime
+from enum import Enum
+
+# NEW: Enum for processing status
+class ProcessingStatus(str, Enum):
+    QUEUED = "QUEUED"
+    AUDIO_EXTRACTED_QUEUED = "AUDIO_EXTRACTED_QUEUED" # Used by monitor
+    PROCESSING = "PROCESSING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    NOT_FOUND = "NOT_FOUND" # For when an interview ID isn't found in GCS/DB
 
 class SegmentResult(BaseModel):
     segment_no: int
@@ -23,6 +33,7 @@ class InterviewResult(BaseModel):
 class ProcessingResponse(BaseModel):
     success: bool
     interview_id: str
-    result: InterviewResult
+    result: Optional[InterviewResult] = None # Make optional as could fail before result
     message: str
     processing_time: Optional[float] = None # Keep this, or remove if InterviewResult.processing_time_seconds is sufficient
+    status: ProcessingStatus = ProcessingStatus.QUEUED # NEW: Add overall status

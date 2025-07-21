@@ -1,19 +1,23 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File, Query
-from typing import List, Dict, Any
+# app/api/endpoints.py
+from fastapi import APIRouter, HTTPException, UploadFile, File, Query, BackgroundTasks
+from typing import List, Dict, Any, Optional
 import os
 import tempfile
 import shutil
 from datetime import datetime
 
 from app.services.audio_processor import AudioProcessorService
-from app.schemas.models import ProcessingResponse, InterviewResult
+from app.schemas.models import ProcessingResponse, InterviewResult, ProcessingStatus # Import new enum
+from app.services.mongodb_handler import MongoDBHandler # For direct status updates if needed
+from config import Config
 
 router = APIRouter()
 
-# Initialize the audio processor service
+# Initialize services at startup
 audio_service = AudioProcessorService()
+mongodb_handler = MongoDBHandler() # For direct interaction if needed outside of audio_service
 
-# This endpoint is for uploading files directly (your original local test)
+# This endpoint is for uploading files directly (your original local test) - KEEP for specific test
 @router.post("/process-interview-upload", response_model=ProcessingResponse)
 async def process_interview_upload(
     interview_id: str,
@@ -25,23 +29,22 @@ async def process_interview_upload(
     Process an interview with reference files and segments uploaded directly.
     """
     try:
-        # Create temporary directory for processing
         with tempfile.TemporaryDirectory() as temp_dir:
-            # Save uploaded files
-            await save_uploaded_files(
+            file_paths = await save_uploaded_files(
                 temp_dir, reference_natural, reference_reading, segments
             )
             
-            # Process the interview (using the local folder path method)
-            result = audio_service.process_interview_from_local_folder(
+            # This will use the local folder processing logic
+            analysis_result, _ = audio_service.analyzer.process_interview(
                 temp_dir, interview_id
             )
             
             return ProcessingResponse(
                 success=True,
                 interview_id=interview_id,
-                result=result,
-                message="Interview processed successfully"
+                result=InterviewResult(**analysis_result), # Ensure it matches schema
+                message="Interview processed successfully from upload",
+                status=ProcessingStatus.COMPLETED
             )
             
     except Exception as e:
@@ -50,7 +53,7 @@ async def process_interview_upload(
             detail=f"Error processing interview from upload: {str(e)}"
         )
 
-# This endpoint is for processing from a local folder path (your original local test)
+# This endpoint is for processing from a local folder path (your original local test) - KEEP for specific test
 @router.post("/process-interview-local-folder", response_model=ProcessingResponse)
 async def process_interview_from_local_folder(
     interview_id: str,
@@ -66,13 +69,14 @@ async def process_interview_from_local_folder(
                 detail=f"Folder not found: {folder_path}"
             )
         
-        result = audio_service.process_interview_from_local_folder(folder_path, interview_id)
+        analysis_result, _ = audio_service.analyzer.process_interview(folder_path, interview_id)
         
         return ProcessingResponse(
             success=True,
             interview_id=interview_id,
-            result=result,
-            message="Interview processed successfully from local folder"
+            result=InterviewResult(**analysis_result),
+            message="Interview processed successfully from local folder",
+            status=ProcessingStatus.COMPLETED
         )
         
     except Exception as e:
@@ -81,32 +85,40 @@ async def process_interview_from_local_folder(
             detail=f"Error processing interview from local folder: {str(e)}"
         )
 
-# NEW ENDPOINT: For fetching and processing from GCS
-@router.post("/process-interview-gcs", response_model=ProcessingResponse)
-async def process_interview_from_gcs(
-    interview_id: str = Query(..., description="Unique ID of the interview, corresponds to GCS folder name.")
+
+# NEW BATCH PROCESSING ENDPOINT FOR GPU SERVER
+@router.post("/process-batch")
+async def process_batch(
+    interview_ids: List[str], # Expects a JSON body like ["id1", "id2", ...]
+    background_tasks: BackgroundTasks # For running the heavy processing in background
 ):
     """
-    Process an interview by fetching audio files from a GCS folder.
-    The GCS path is expected to be gs://<bucket_name>/test_audio_files/shardul_test/{interview_id}/
+    Initiates processing of a batch of interviews fetched from GCS.
+    This endpoint is designed to be called by the Queue Monitor/Dispatcher.
+    The actual processing will run as a background task.
     """
-    try:
-        print(f"Received request to process interview_id: {interview_id} from GCS.")
-        result = audio_service.process_interview_from_gcs(interview_id)
-        
-        return ProcessingResponse(
-            success=True,
-            interview_id=interview_id,
-            result=result,
-            message=f"Interview {interview_id} processed successfully from GCS."
-        )
-        
-    except Exception as e:
-        print(f"API Error: {str(e)}") # Log the actual error for debugging
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error processing interview from GCS: {str(e)}. Please check logs for details."
-        )
+    if not interview_ids:
+        raise HTTPException(status_code=400, detail="No interview IDs provided for batch processing.")
+    
+    batch_id = f"batch_{datetime.now().isoformat().replace(':', '-')}_{len(interview_ids)}"
+    print(f"Received request to process batch '{batch_id}' with {len(interview_ids)} interviews.")
+    
+    # Immediately update MongoDB for each interview to indicate it's part of a batch
+    for interview_id in interview_ids:
+        # We set status to PROCESSING here, it will be updated to FAILED/COMPLETED by audio_service
+        mongodb_handler.update_interview_status(interview_id, ProcessingStatus.PROCESSING, batch_id=batch_id)
+
+    # Run the heavy processing as a background task
+    # This ensures the API immediately returns a 200 OK, preventing timeouts
+    # while the model is downloading and processing the batch.
+    background_tasks.add_task(audio_service.process_batch_from_gcs, interview_ids)
+
+    return {
+        "success": True,
+        "message": f"Batch processing initiated for {len(interview_ids)} interviews.",
+        "batch_id": batch_id,
+        "status": "PROCESSING_INITIATED"
+    }
 
 
 @router.get("/status")
@@ -132,9 +144,8 @@ async def save_uploaded_files(
     """
     file_paths = {}
     
-    # Save reference files
-    natural_path = os.path.join(temp_dir, "reference_natural.wav")
-    reading_path = os.path.join(temp_dir, "reference_reading.wav")
+    natural_path = os.path.join(temp_dir, Config.REFERENCE_NATURAL_FILE)
+    reading_path = os.path.join(temp_dir, Config.REFERENCE_READING_FILE)
     
     with open(natural_path, "wb") as f:
         shutil.copyfileobj(reference_natural.file, f)
@@ -144,13 +155,12 @@ async def save_uploaded_files(
         shutil.copyfileobj(reference_reading.file, f)
     file_paths["reference_reading"] = reading_path
     
-    # Save segment files
     segment_paths = []
     for i, segment in enumerate(segments, 1):
         segment_path = os.path.join(temp_dir, f"segment_{i}.wav")
         with open(segment_path, "wb") as f:
             shutil.copyfileobj(segment.file, f)
         segment_paths.append(segment_path)
-    file_paths["segments"] = segment_paths # Store list of segment paths
+    file_paths["segments"] = segment_paths
     
     return file_paths
