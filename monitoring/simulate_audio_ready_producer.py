@@ -40,12 +40,30 @@ def send_message(interview_id: str):
 if __name__ == "__main__":
     print(f"Simulating audio ready messages. Sending to RabbitMQ queue: {Config.RABBITMQ_PROCESSING_QUEUE}")
     print("Ensure RabbitMQ is running and your .env is configured correctly.")
-    print("Remember to manually upload corresponding GCS folders (e.g., 'test_extracted_audio/simulated_interview_XXXX/')!")
-    print("Press Ctrl+C to exit.")
-    try:
-        while True:
-            new_interview_id = f"simulated_interview_{uuid.uuid4().hex[:8]}"
-            send_message(new_interview_id)
-            time.sleep(5) # Send a new message every 5 seconds
-    except KeyboardInterrupt:
-        print("\nProducer stopped.")
+    print("Remember to manually upload corresponding GCS folders for each predefined interview ID!")
+    
+    # --- TEMPORARY TEST MODE ---
+    # Define a list of interview IDs that you have ALREADY manually set up in GCS
+    test_interview_ids = [
+        "simulated_interview_0cd3a115",
+        "simulated_interview_5a3a67db",
+        #"predefined_interview_003", # Add more if your threshold is higher
+    ]
+    
+    # Send each message once and exit
+    for test_id in test_interview_ids:
+        send_message(test_id)
+        time.sleep(1) # Small delay
+    print("\nSent all predefined test messages. Exiting producer.")
+    # --- END TEMPORARY TEST MODE ---
+    
+    #print("Remember to manually upload corresponding GCS folders (e.g., 'test_extracted_audio/simulated_interview_XXXX/')!")
+    #print("Press Ctrl+C to exit.")
+    #try:
+    #    while True:
+    #        new_interview_id = f"simulated_interview_{uuid.uuid4().hex[:8]}"
+    #        send_message(new_interview_id)
+    #        time.sleep(5) # Send a new message every 5 seconds
+    #except KeyboardInterrupt:
+    #    print("\nProducer stopped.")
+ 

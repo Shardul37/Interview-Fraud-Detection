@@ -15,3 +15,12 @@ outputs/
 
 # Test data (optional - remove this line if you want to track test data)
 test_data/ 
+
+#Folders
+sample_interview/
+long_segments_54/
+long_segments84/
+long_segments83/
+long_segments/
+audio-segmentation/
+extracted_interview_speech/

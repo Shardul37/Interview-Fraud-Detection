@@ -61,7 +61,7 @@ class RabbitMQClient:
             print(f"Failed to ensure queue '{queue_name}' exists: {e}")
             raise
 
-    def publish_message(self, queue_name: str, message: Dict):
+    def publish_message(self, queue_name: str, message: Dict, close_after_publish: bool = True):
         """Publishes a message to the specified queue."""
         try:
             self._connect()
@@ -82,7 +82,8 @@ class RabbitMQClient:
             # Re-raise to let caller handle, or implement retry logic
             raise
         finally:
-            self._close_connection() # Close connection after publish for simplicity in short-lived scripts
+            if close_after_publish:
+                self._close_connection() # Close connection after publish for simplicity in short-lived scripts
 
     def start_consuming(self, queue_name: str, callback: Callable[[Dict, pika.adapters.blocking_connection.BlockingChannel, pika.spec.Basic.Deliver, pika.spec.BasicProperties], None]):
         """Starts consuming messages from a queue in a separate thread."""

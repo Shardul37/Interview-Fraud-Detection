@@ -97,7 +97,7 @@ class QueueMonitor:
             try:
                 response = requests.get(self.gpu_status_url, timeout=5) # Short timeout for poll
                 response.raise_for_status() # Raises HTTPError for bad responses (4xx or 5xx)
-                if response.json().get("status") == "healthy" and response.json().get("model_loaded"):
+                if response.json().get("status") == "running" and response.json().get("model_loaded"):
                     print("GPU instance is ready and model is loaded.")
                     return True
             except requests.exceptions.RequestException as e:

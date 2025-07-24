@@ -1,8 +1,10 @@
 # app/services/gcs_handler.py
 import os
 import tempfile
+import json
+import numpy as np
 from google.cloud import storage
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Any
 
 class GCSHandler:
     def __init__(self, bucket_name: str):
@@ -35,6 +37,55 @@ class GCSHandler:
             # print(f"Downloaded {gcs_file_path} to {local_destination_path}") # Removed print for less verbosity
         except Exception as e:
             print(f"Error downloading {gcs_file_path}: {e}")
+            raise
+
+    def upload_json(self, gcs_file_path: str, data: Dict[str, Any]):
+        """
+        Uploads a dictionary as JSON to GCS.
+        Args:
+            gcs_file_path: The GCS path where the JSON file should be stored (e.g., 'test_results/interview_123.json').
+            data: The dictionary to be serialized as JSON.
+        """
+        blob = self.bucket.blob(gcs_file_path)
+        try:
+            json_string = json.dumps(data, indent=2)
+            blob.upload_from_string(json_string, content_type='application/json')
+            print(f"Uploaded JSON to gs://{self.bucket_name}/{gcs_file_path}")
+        except Exception as e:
+            print(f"Error uploading JSON to {gcs_file_path}: {e}")
+            raise
+        
+    def upload_file(self, local_file_path: str, gcs_file_path: str):
+        """
+        Uploads a file from local path to GCS.
+        Args:
+            local_file_path: The local path to the file to upload.
+            gcs_file_path: The GCS path where the file should be stored (e.g., 'audio_segments/interview_123/segment_1.wav').
+        """
+        blob = self.bucket.blob(gcs_file_path)
+        try:
+            blob.upload_from_filename(local_file_path)
+            print(f"Uploaded file to gs://{self.bucket_name}/{gcs_file_path}")
+        except Exception as e:
+            print(f"Error uploading file to {gcs_file_path}: {e}")
+            raise
+
+    def upload_numpy(self, gcs_file_path: str, data: Dict[str, Any]):
+        """
+        Uploads embeddings data as a numpy file to GCS.
+        Args:
+            gcs_file_path: The GCS path where the numpy file should be stored (e.g., 'test_embeddings/interview_123.npy').
+            data: The embeddings data to be saved as numpy file.
+        """
+        blob = self.bucket.blob(gcs_file_path)
+        try:
+            with tempfile.NamedTemporaryFile() as temp_file:
+                np.save(temp_file.name, data)
+                temp_file.flush()
+                blob.upload_from_filename(temp_file.name, content_type='application/octet-stream')
+            print(f"Uploaded numpy file to gs://{self.bucket_name}/{gcs_file_path}")
+        except Exception as e:
+            print(f"Error uploading numpy file to {gcs_file_path}: {e}")
             raise
 
     def download_folder_to_local_directory(self, gcs_folder_prefix: str, local_destination_dir: str) -> List[str]:

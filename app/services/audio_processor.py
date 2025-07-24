@@ -99,13 +99,12 @@ class AudioProcessorService:
                     )
                     
                     # Store results to GCS (JSON, Embeddings) and MongoDB
-                    json_gcs_path = f"{Config.GCS_BUCKET_NAME}/{Config.GCS_RESULTS_PREFIX}{interview_id}.json"
-                    embeddings_gcs_path = f"{Config.GCS_BUCKET_NAME}/{Config.GCS_EMBEDDINGS_PREFIX}{interview_id}.npy"
+                    json_gcs_path = f"gs://{Config.GCS_BUCKET_NAME}/{Config.GCS_RESULTS_PREFIX}{interview_id}.json"
+                    embeddings_gcs_path = f"gs://{Config.GCS_BUCKET_NAME}/{Config.GCS_EMBEDDINGS_PREFIX}{interview_id}.npy"
                     
-                    # This would involve serializing analysis_results to JSON and embeddings_data to .npy
-                    # For now, let's just log and update MongoDB
-                    # self.gcs_handler.upload_json(f"{Config.GCS_RESULTS_PREFIX}{interview_id}.json", analysis_results)
-                    # self.gcs_handler.upload_numpy(f"{Config.GCS_EMBEDDINGS_PREFIX}{interview_id}.npy", embeddings_data)
+                    # Upload files to GCS
+                    self.gcs_handler.upload_json(f"{Config.GCS_RESULTS_PREFIX}{interview_id}.json", analysis_results)
+                    self.gcs_handler.upload_numpy(f"{Config.GCS_EMBEDDINGS_PREFIX}{interview_id}.npy", embeddings_data)
 
                     # Update MongoDB with results and COMPLETED status
                     self.mongodb_handler.store_processing_results(
