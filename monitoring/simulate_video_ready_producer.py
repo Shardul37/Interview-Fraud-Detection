@@ -52,9 +52,7 @@ if __name__ == "__main__":
         
         # Test video data matching the payload format you provided
         test_video_data = [
-            {"id": "688108bbc619da1fe435f1421753340200.013477", "path": f"{raw_video_gcs_prefix}688108bbc619da1fe435f1421753340200.013477/stitched_video.mp4"},
-            {"id": "another_interview_id_001", "path": f"{raw_video_gcs_prefix}another_interview_id_001/stitched_video.mp4"},
-            {"id": "yet_another_interview_id_002", "path": f"{raw_video_gcs_prefix}yet_another_interview_id_002/stitched_video.mp4"},
+            {"id": "sim_video_001", "path": f"{raw_video_gcs_prefix}sim_video_001/stitched_video.mp4"},
         ]
 
         for video_info in test_video_data:

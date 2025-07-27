@@ -35,7 +35,7 @@ class Config:
     # The MAX_INTERVIEW_SEGMENTS_PER_MODEL_PASS refers to the number of *interview segments*
     # that can be processed in one batch, *excluding* the 2 reference segments.
     # So if it's 3, the model's batch size will be 2 (refs) + 3 (segments) = 5.
-    MAX_INTERVIEW_SEGMENTS_PER_MODEL_PASS = int(os.environ.get("MAX_INTERVIEW_SEGMENTS_PER_MODEL_PASS", 3))
+    MAX_INTERVIEW_SEGMENTS_PER_MODEL_PASS = int(os.environ.get("MAX_INTERVIEW_SEGMENTS_PER_MODEL_PASS", 1))
 
     MIN_EXPECTED_INTERVIEW_SEGMENTS = int(os.environ.get("MIN_EXPECTED_INTERVIEW_SEGMENTS", 1))
 
