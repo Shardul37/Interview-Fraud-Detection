@@ -34,7 +34,7 @@ def extract_segment_timestamps(input_audio, min_segment_length=15000, silence_th
 
 # Example usage
 timestamps = extract_segment_timestamps(
-    "sample_interview/mp3audio_83.mp3",
+    "sample_interview/audio_83.wav",
     min_segment_length=15000,
     silence_thresh=-40
 )

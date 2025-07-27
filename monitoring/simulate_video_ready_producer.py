@@ -53,7 +53,7 @@ if __name__ == "__main__":
         
         test_video_data = [
             #{"id": "sim_video_001", "path": f"{raw_video_gcs_prefix}sim_video_001.mp4"},
-            {"id": "sim_video_002", "path": f"{raw_video_gcs_prefix}sim_video_002.mp4"},            # Add more as needed for testing your batching threshold
+            {"id": "sim_video_001", "path": f"{raw_video_gcs_prefix}sim_video_002.mp4"},            # Add more as needed for testing your batching threshold
         ]
 
         # Send each message once and exit
