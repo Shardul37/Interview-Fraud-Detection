@@ -3,37 +3,57 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 from enum import Enum
 
-# NEW: Enum for processing status
 class ProcessingStatus(str, Enum):
     QUEUED = "QUEUED"
-    AUDIO_EXTRACTED_QUEUED = "AUDIO_EXTRACTED_QUEUED" # Used by monitor
-    PROCESSING = "PROCESSING"
+    VIDEO_DOWNLOADED = "VIDEO_DOWNLOADED" # New status for video conversion start
+    AUDIO_EXTRACTED_QUEUED = "AUDIO_EXTRACTED_QUEUED"
+    PROCESSING = "PROCESSING" # Generic processing stage, for video conversion or ML inference
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
-    NOT_FOUND = "NOT_FOUND" # For when an interview ID isn't found in GCS/DB
+    NOT_FOUND = "NOT_FOUND"
+
+class ProcessingHistoryEntry(BaseModel):
+    timestamp: str
+    status: ProcessingStatus
+    stage: Optional[str] = None
+    actor: str
+    message: Optional[str] = None
+    error: Optional[str] = None
+    attempt: Optional[int] = None
+    # Add any other relevant details for specific stages
+    video_gcs_path: Optional[str] = None
+    audio_gcs_prefix: Optional[str] = None
+    batch_id: Optional[str] = None
+    # If you later want to store mini-batch details
+    # processed_segments: Optional[List[int]] = None
 
 class SegmentResult(BaseModel):
     segment_no: int
     reading_cosine: float
     natural_cosine: float
     verdict: str
-    processed_at: str # NEW: timestamp for each segment
+    processed_at: str
 
 class InterviewResult(BaseModel):
     interview_id: str
     final_verdict: str
-    cheating_segments: int # integer
+    cheating_segments: int
     total_segments: int
-    json_file_path: Optional[str] = None # NEW: GCS path for results JSON
-    embeddings_file_path: Optional[str] = None # NEW: GCS path for embeddings
-    processed_at: str # timestamp for the whole interview processing
-    processing_time_seconds: Optional[float] = None # NEW: Processing time
-    segments_details: List[SegmentResult] # NEW: Renamed 'segments' to 'segments_details' for clarity
+    # Removed json_file_path and embeddings_file_path as results are in DB
+    processed_at: str
+    processing_time_seconds: Optional[float] = None
+    segments_details: List[SegmentResult]
+    
+    # NEW: Add history directly to InterviewResult model (reflects DB structure)
+    history: List[ProcessingHistoryEntry] = []
 
+# This ProcessingResponse might primarily be used for API endpoints
+# which are now removed for the ML cron job but still relevant for video conversion service if it had an API.
+# Keeping it for consistency in case you re-introduce an API or for other status checks.
 class ProcessingResponse(BaseModel):
     success: bool
     interview_id: str
-    result: Optional[InterviewResult] = None # Make optional as could fail before result
+    result: Optional[InterviewResult] = None
     message: str
-    processing_time: Optional[float] = None # Keep this, or remove if InterviewResult.processing_time_seconds is sufficient
-    status: ProcessingStatus = ProcessingStatus.QUEUED # NEW: Add overall status
+    processing_time: Optional[float] = None
+    status: ProcessingStatus = ProcessingStatus.QUEUED

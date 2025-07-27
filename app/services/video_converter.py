@@ -94,16 +94,22 @@ class VideoConverterService:
         uploaded_segment_paths = []
 
         try:
+            print(f"Downloading video '{gcs_video_path}' to '{local_video_path}'...")
             self.gcs_handler.download_file(gcs_video_path, local_video_path)
+
+            print(f"Extracting full audio from '{local_video_path}'...")
             self._extract_audio_from_video(local_video_path, local_extracted_audio_path)
 
+            print(f"Detecting and splitting segments for '{video_id}'...")
             segments_info = self._detect_and_split_segments_pydub(
                 local_extracted_audio_path, local_segment_output_dir
             )
 
             if not segments_info or len(segments_info) < Config.MIN_EXPECTED_INTERVIEW_SEGMENTS:
+                 print(f"Warning: Not enough segments found for {video_id}. Found {len(segments_info)}, expected at least {Config.MIN_EXPECTED_INTERVIEW_SEGMENTS}. Skipping upload.")
                  return ""
             
+            print(f"Uploading {len(segments_info)} segments to GCS for {video_id}...")
             for segment_data in segments_info:
                 local_filename = segment_data["filename"]
                 local_filepath = os.path.join(local_segment_output_dir, local_filename)
@@ -112,6 +118,7 @@ class VideoConverterService:
                 self.gcs_handler.upload_file(local_filepath, gcs_destination_path)
                 uploaded_segment_paths.append(gcs_destination_path)
 
+            print(f"Successfully uploaded {len(uploaded_segment_paths)} audio segments for {video_id}.")
             return gcs_output_prefix
 
         except Exception as e:
@@ -123,3 +130,4 @@ class VideoConverterService:
                 os.remove(local_extracted_audio_path)
             if os.path.exists(local_segment_output_dir):
                 shutil.rmtree(local_segment_output_dir)
+            print(f"Cleaned up local temp files for {video_id}.")

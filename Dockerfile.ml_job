@@ -1,0 +1,30 @@
+# Dockerfile for the ML Model Inference Service (GPU Processing)
+
+# Use a Python base image with CUDA support for GPU.
+# This image includes NVIDIA CUDA libraries and drivers necessary for PyTorch/Transformers on GPU.
+# This example uses a common PyTorch CUDA runtime image.
+FROM pytorch/pytorch:1.13.1-cuda11.6-cudnn8-runtime
+
+# Set the working directory inside the container.
+WORKDIR /app
+
+# Install any additional system dependencies if needed (e.g., for soundfile to read specific formats, though typically covered by base image)
+# For this specific case, the base image and pip requirements should cover it.
+# If you run into issues with soundfile, you might add:
+# RUN apt-get update && apt-get install -y --no-install-recommends libsndfile1 && rm -rf /var/lib/apt/lists/*
+
+# Copy only the requirements.txt file first to leverage Docker cache.
+COPY requirements.txt .
+
+# Install Python packages.
+# Ensure torch, torchaudio, and transformers are installed.
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the entire application source code.
+COPY . .
+
+# Set environment variables for temporary local paths within the container.
+ENV LOCAL_TEMP_AUDIO_SEGMENTS_DIR="/tmp/extracted_audio"
+
+# Command to run the ML batch processor script.
+CMD ["python", "monitoring/ml_batch_processor.py"]

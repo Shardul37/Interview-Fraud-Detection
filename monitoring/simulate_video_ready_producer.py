@@ -5,7 +5,7 @@ import uuid
 import os
 from config import Config
 
-def send_message(video_id: str, gcs_video_path: str):
+def send_message(interview_id: str, video_path: str):
     connection = None
     try:
         connection = pika.BlockingConnection(pika.ConnectionParameters(
@@ -15,10 +15,11 @@ def send_message(video_id: str, gcs_video_path: str):
         ))
         channel = connection.channel()
 
-        queue_name = Config.RABBITMQ_VIDEO_READY_QUEUE # Send to the new video queue
+        queue_name = Config.RABBITMQ_VIDEO_READY_QUEUE
         channel.queue_declare(queue=queue_name, durable=True)
 
-        message = {"video_id": video_id, "gcs_video_path": gcs_video_path}
+        # New payload format
+        message = {"interview_id": interview_id, "path": video_path}
         channel.basic_publish(
             exchange='',
             routing_key=queue_name,
@@ -27,7 +28,7 @@ def send_message(video_id: str, gcs_video_path: str):
                 delivery_mode=2,  # make message persistent
             )
         )
-        print(f" [x] Sent '{video_id}' (video path: {gcs_video_path}) to queue '{queue_name}'")
+        print(f" [x] Sent '{interview_id}' (video path: {video_path}) to queue '{queue_name}'")
     except pika.exceptions.AMQPConnectionError as e:
         print(f"ERROR: Could not connect to RabbitMQ at {Config.RABBITMQ_HOST}:{Config.RABBITMQ_PORT}. Is RabbitMQ server running? Error: {e}")
     except Exception as e:
@@ -43,32 +44,24 @@ if __name__ == "__main__":
 
     print(f"Simulating video ready messages. Sending to RabbitMQ queue: {Config.RABBITMQ_VIDEO_READY_QUEUE}")
     print("Ensure RabbitMQ server is running and accessible.")
-    print("IMPORTANT: Manually upload corresponding MP4 video files to GCS (e.g., 'raw_videos/simulated_video_XXXX.mp4')!")
+    print("IMPORTANT: Manually upload corresponding MP4 video files to GCS (e.g., 'shardul_test/test_videos/sim_video_00X.mp4')!")
     print("Press Ctrl+C to exit.")
     try:
-        # Define a list of video IDs and their GCS paths you've manually uploaded for testing
-        # Replace 'your_raw_videos_bucket_prefix' with the actual GCS prefix where raw videos are stored
-        # e.g., "raw_videos/"
-        raw_video_gcs_prefix = "shardul_test/test_videos/" # Adjust this to your actual raw video GCS prefix (NOTE: bucket name should NOT be included)
+        # Example GCS path for raw videos. Adjust this to your actual GCS prefix.
+        raw_video_gcs_prefix = "shardul_test/test_videos/"
         
+        # Test video data matching the payload format you provided
         test_video_data = [
-            #{"id": "sim_video_001", "path": f"{raw_video_gcs_prefix}sim_video_001.mp4"},
-            {"id": "sim_video_002", "path": f"{raw_video_gcs_prefix}sim_video_002.mp4"},            # Add more as needed for testing your batching threshold
+            {"id": "688108bbc619da1fe435f1421753340200.013477", "path": f"{raw_video_gcs_prefix}688108bbc619da1fe435f1421753340200.013477/stitched_video.mp4"},
+            {"id": "another_interview_id_001", "path": f"{raw_video_gcs_prefix}another_interview_id_001/stitched_video.mp4"},
+            {"id": "yet_another_interview_id_002", "path": f"{raw_video_gcs_prefix}yet_another_interview_id_002/stitched_video.mp4"},
         ]
 
-        # Send each message once and exit
         for video_info in test_video_data:
             send_message(video_info["id"], video_info["path"])
-            time.sleep(1) # Small delay
+            time.sleep(1)
         print("\nSent all predefined test video messages. Exiting producer.")
 
-        # Uncomment the while loop below if you want random, continuous video messages again
-        # while True:
-        #     new_video_id = f"simulated_video_{uuid.uuid4().hex[:8]}"
-        #     # You'd need to manually upload a video for each random ID or use a fixed one
-        #     fixed_gcs_video_path = f"{raw_video_gcs_prefix}your_test_video.mp4" # Example fixed path (NOTE: Do NOT include bucket name in path)
-        #     send_message(new_video_id, fixed_gcs_video_path)
-        #     time.sleep(5)
     except KeyboardInterrupt:
         print("\nProducer stopped.")
     except Exception as e:

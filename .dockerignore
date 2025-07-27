@@ -1,0 +1,11 @@
+.git/
+.env
+__pycache__/
+*.pyc
+*.log
+tmp/
+keyfile.json
+*.md
+Dockerfile # This line will prevent Dockerfile.video_converter and Dockerfile.ml_job from being copied into the images if you copy the root folder.
+# You might want to remove the Dockerfile line and explicitly copy the one you need into build context or structure it carefully.
+# For this setup, having both Dockerfiles in root and building specific ones means you don't need to exclude them from each other.
