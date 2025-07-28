@@ -3,7 +3,8 @@
 # Use a Python base image with CUDA support for GPU.
 # This image includes NVIDIA CUDA libraries and drivers necessary for PyTorch/Transformers on GPU.
 # This example uses a common PyTorch CUDA runtime image.
-FROM pytorch/pytorch:1.13.1-cuda11.6-cudnn8-runtime
+FROM pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime 
+# This tag supports Python 3.11.
 
 # Set the working directory inside the container.
 WORKDIR /app
@@ -14,11 +15,11 @@ WORKDIR /app
 # RUN apt-get update && apt-get install -y --no-install-recommends libsndfile1 && rm -rf /var/lib/apt/lists/*
 
 # Copy only the requirements.txt file first to leverage Docker cache.
-COPY requirements.txt .
+COPY requirements.ml_job.txt .
 
 # Install Python packages.
 # Ensure torch, torchaudio, and transformers are installed.
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.ml_job.txt
 
 # Copy the entire application source code.
 COPY . .

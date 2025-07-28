@@ -1,0 +1,38 @@
+# Core
+python-dotenv
+pika
+pymongo
+certifi
+numpy
+soundfile
+
+# Hugging Face Transformers & Torch ecosystem
+transformers
+torch
+torchaudio
+huggingface-hub
+safetensors # Dependency of transformers, good to keep if causing issues
+tokenizers # Dependency of transformers, good to keep if causing issues
+filelock # Often used by huggingface_hub for caching
+fsspec # Often used by huggingface_hub for caching
+tqdm # Transformers might use it for progress bars
+
+# Google Cloud & Auth
+google-api-core
+google-auth
+google-cloud-core
+google-cloud-storage
+google-crc32c
+google-resumable-media
+googleapis-common-protos
+proto-plus
+pyasn1
+pyasn1_modules
+rsa
+dnspython # For pymongo SRV records
+
+# Pydantic (for your schemas)
+pydantic
+pydantic_core
+annotated-types
+typing_extensions # Often pulled by pydantic or other modern libraries

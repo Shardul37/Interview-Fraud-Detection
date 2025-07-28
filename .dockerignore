@@ -1,11 +1,53 @@
-.git/
-.env
+# .dockerignore
+# Ignore build artifacts and Python specific files
 __pycache__/
 *.pyc
-*.log
-tmp/
-keyfile.json
+*.pyo
+*.pyd
+venv/
+ai-fraud-env/
+.pytest_cache/
+.mypy_cache/
+
+# Ignore Docker-related build temporary directories and files
+tmp/                     # Your LOCAL_TEMP_VIDEO_DIR and LOCAL_TEMP_AUDIO_SEGMENTS_DIR likely live here
+build/                   # Common build output directories
+dist/
+*.egg-info/
+
+# Ignore version control and IDE files
+.git/
+.gitignore
+.vscode/
+.idea/
+
+# Ignore configuration files that should NOT be baked into the image
+.env                     # Crucial: NEVER bake sensitive .env files into your image!
+keyfile.json             # Crucial: NEVER bake sensitive service account keys into your image!
+requirements.txt
+requirements.ml_job.txt
+
+# Ignore project documentation/metadata
 *.md
-Dockerfile # This line will prevent Dockerfile.video_converter and Dockerfile.ml_job from being copied into the images if you copy the root folder.
-# You might want to remove the Dockerfile line and explicitly copy the one you need into build context or structure it carefully.
-# For this setup, having both Dockerfiles in root and building specific ones means you don't need to exclude them from each other.
+LICENSE
+
+# Dockerfiles themselves (no need to copy into their own image)
+Dockerfile
+Dockerfile.video_converter
+Dockerfile.ml_job
+
+# =================================================================
+# Project-Specific Code/Data NOT Needed by THIS Service
+# (Video Converter Service does NOT need ML model or ML batch processor)
+# =================================================================
+app/models/           # Contains wavlm_analyzer.py and potentially downloaded model weights
+monitoring/ml_batch_processor.py # The script for the ML cron job
+monitoring/simulate_video_ready_producer.py # The script for simulating video messages
+
+
+# Large files or directories not needed in the final image
+# Add any other large files or folders that are in your project root but not needed in the Docker image
+# For example, if you had a 'datasets/' folder, you'd add:
+# datasets/
+# large_model_weights/
+

@@ -1,6 +1,4 @@
-# Dockerfile for the Video-to-Audio Conversion Service (CPU Preprocessing)
-
-FROM python:3.9-slim-buster
+FROM python:3.13.5-slim-bookworm
 
 WORKDIR /app
 
@@ -9,11 +7,14 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends ffmpeg && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy only the requirements.txt file first to leverage Docker cache.
-COPY requirements.txt .
+# Copy ONLY the specific requirements file for this service
+COPY requirements.video_converter.txt .
 
 # Install Python packages.
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.video_converter.txt
+
+# --- ADD THIS LINE ---
+ENV PYTHONPATH=/app
 
 # Copy the entire application source code.
 COPY . .

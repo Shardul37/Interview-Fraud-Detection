@@ -1,0 +1,31 @@
+# Core
+python-dotenv
+pika
+pymongo
+pydub
+soundfile
+numpy
+certifi
+
+# Google Cloud & Auth (direct dependencies you use or that Google libraries need)
+google-api-core
+google-auth
+google-cloud-core
+google-cloud-storage
+google-crc32c
+google-resumable-media
+googleapis-common-protos
+proto-plus
+pyasn1
+pyasn1_modules
+rsa
+dnspython # For pymongo SRV records
+
+# Pydantic (for your schemas)
+pydantic
+pydantic_core
+annotated-types
+typing_extensions # Often pulled by pydantic or other modern libraries
+
+# Specific versions (remove if they cause conflicts later, let pip decide)
+audioop-lts==0.2.1 # Still requires Python >=3.13
