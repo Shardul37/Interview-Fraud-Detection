@@ -14,6 +14,8 @@ class RabbitMQClient:
             credentials=self.credentials,
             heartbeat=600
         )
+        print(f"DEBUG: Attempting to connect to RabbitMQ at {host}:{port} with user {user}")
+        
         self._connection = None
         self._channel = None
         self._consumer_thread: Optional[Thread] = None
