@@ -15,7 +15,7 @@ import time
 from config import Config
 
 class WavLMAudioAnalyzer:
-    def __init__(self, force_cpu: bool = True):
+    def __init__(self, force_cpu: bool = False):
         try:
             print("Loading WavLM model...")
             self.feature_extractor = Wav2Vec2FeatureExtractor.from_pretrained("microsoft/wavlm-base-plus")
