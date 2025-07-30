@@ -8,3 +8,5 @@ History is tracked and updated in mongoDB. The extracted audiofiles are stored i
 To create docker images run those two scripts. The ml-service container may have problem to run in a 8GB machine as the code itself demands 6-8GB of ram. 
 
 You can edit parameters like how many segments you want to process in a single ml pass, url for rabbitmq or gcs/mongdb destinations
+
+#ENTRY POINt EXECUTABLE LOCALLY: chmod +x local-wavlm/entrypoint.sh

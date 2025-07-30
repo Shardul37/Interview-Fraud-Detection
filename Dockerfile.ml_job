@@ -42,9 +42,13 @@ COPY app/services/rabbitmq_client.py app/services/
 
 # Copy the specific monitoring script
 COPY monitoring/ml_batch_processor.py monitoring/
+COPY secrets_loader.py . 
+COPY entrypoint.sh .     
 
 # Set environment variables for temporary local paths within the container.
 ENV LOCAL_TEMP_AUDIO_SEGMENTS_DIR="/tmp/extracted_audio"
 
+
+ENTRYPOINT ["/src/entrypoint.sh"]
 # Command to run the ML batch processor script.
 CMD ["python", "-u", "monitoring/ml_batch_processor.py"]

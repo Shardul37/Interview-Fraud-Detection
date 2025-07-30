@@ -29,3 +29,9 @@ typing_extensions==4.12.2
 
 # Specific versions (remove if they cause conflicts later, let pip decide)
 audioop-lts==0.2.1 # Still requires Python >=3.13
+
+#google-secret-mananger
+google-cloud-secret-manager==2.24.0
+grpc-google-iam-v1==0.14.2
+grpcio==1.74.0
+grpcio-status==1.74.0

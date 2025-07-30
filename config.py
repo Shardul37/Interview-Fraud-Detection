@@ -15,6 +15,7 @@ class Config:
     RABBITMQ_PORT = int(os.environ.get("RABBITMQ_PORT", 5672))
     RABBITMQ_USER = os.environ.get("RABBITMQ_USER", "guest")
     RABBITMQ_PASS = os.environ.get("RABBITMQ_PASS", "guest")
+    #These 4 varibles are no longer used
     RABBITMQ_PROCESSING_QUEUE = os.environ.get("RABBITMQ_PROCESSING_QUEUE", "INTERVIEW_PROCESSING_QUEUE_SHARDULTEST") # This is now RabbitMQ2 for ML
     RABBITMQ_VIDEO_READY_QUEUE = os.environ.get("RABBITMQ_VIDEO_READY_QUEUE", "VIDEO_READY_QUEUE_SHARDULTEST") # This is RabbitMQ1 for Video Converter
 
@@ -27,7 +28,14 @@ class Config:
     LOCAL_TEMP_AUDIO_SEGMENTS_DIR = os.environ.get("LOCAL_TEMP_AUDIO_SEGMENTS_DIR", "/tmp/extracted_audio")
     
     # MongoDB Configurations
-    MONGO_URI = os.environ.get("MONGO_URI", "mongodb://localhost:27017/")
+    #MONGO_URI = os.environ.get("MONGO_URI", "mongodb://localhost:27017/")
+     # RabbitMQ Configurations (now fetched from Secret Manager)
+    # Assuming secrets_loader.py sets STAG_RABBITMQ_URL
+    RABBITMQ_URL = os.environ.get(f"{os.getenv('ENV', 'stag').upper()}_RABBITMQ_URL", "amqp://guest:guest@localhost:5672/")
+
+    # MongoDB Configurations (now fetched from Secret Manager)
+    # Assuming secrets_loader.py sets STAG_DATABASE_URL
+    MONGO_URI = os.environ.get(f"{os.getenv('ENV', 'stag').upper()}_DATABASE_URL", "mongodb://localhost:27017/")
     MONGO_DB_NAME = os.environ.get("MONGO_DB_NAME", "Cheating-Results")
     MONGO_COLLECTION_INTERVIEWS = os.environ.get("MONGO_COLLECTION_INTERVIEWS", "Result")
 
