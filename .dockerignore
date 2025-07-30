@@ -25,7 +25,6 @@ dist/
 .env                     # Crucial: NEVER bake sensitive .env files into your image!
 keyfile.json             # Crucial: NEVER bake sensitive service account keys into your image!
 requirements.txt
-requirements.ml_job.txt
 
 # Ignore project documentation/metadata
 *.md
@@ -40,14 +39,8 @@ Dockerfile.ml_job
 # Project-Specific Code/Data NOT Needed by THIS Service
 # (Video Converter Service does NOT need ML model or ML batch processor)
 # =================================================================
-app/models/           # Contains wavlm_analyzer.py and potentially downloaded model weights
-monitoring/ml_batch_processor.py # The script for the ML cron job
+#app/models/           # Contains wavlm_analyzer.py and potentially downloaded model weights
+#monitoring/ml_batch_processor.py # The script for the ML cron job
 monitoring/simulate_video_ready_producer.py # The script for simulating video messages
 
-
-# Large files or directories not needed in the final image
-# Add any other large files or folders that are in your project root but not needed in the Docker image
-# For example, if you had a 'datasets/' folder, you'd add:
-# datasets/
-# large_model_weights/
 

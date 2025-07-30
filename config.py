@@ -17,6 +17,7 @@ class Config:
     RABBITMQ_PASS = os.environ.get("RABBITMQ_PASS", "guest")
     RABBITMQ_PROCESSING_QUEUE = os.environ.get("RABBITMQ_PROCESSING_QUEUE", "INTERVIEW_PROCESSING_QUEUE_SHARDULTEST") # This is now RabbitMQ2 for ML
     RABBITMQ_VIDEO_READY_QUEUE = os.environ.get("RABBITMQ_VIDEO_READY_QUEUE", "VIDEO_READY_QUEUE_SHARDULTEST") # This is RabbitMQ1 for Video Converter
+    RABBITMQ_URL="amqp://rabbit:84sxOIf4V0k8Rwp@34.170.213.229:5672/"  #never used though
 
     # --- Video Conversion specific settings ---
     MIN_AUDIO_SEGMENT_LENGTH_MS = int(os.environ.get("MIN_AUDIO_SEGMENT_LENGTH_MS", 15000)) # 15 seconds

@@ -3,11 +3,12 @@
 # Use a Python base image with CUDA support for GPU.
 # This image includes NVIDIA CUDA libraries and drivers necessary for PyTorch/Transformers on GPU.
 # This example uses a common PyTorch CUDA runtime image.
-FROM pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime 
+FROM pytorch/pytorch:2.7.1-cuda11.8-cudnn9-runtime
 # This tag supports Python 3.11.
 
 # Set the working directory inside the container.
-WORKDIR /app
+WORKDIR /src
+ENV PYTHONPATH=/src
 
 # Install any additional system dependencies if needed (e.g., for soundfile to read specific formats, though typically covered by base image)
 # For this specific case, the base image and pip requirements should cover it.
@@ -22,10 +23,28 @@ COPY requirements.ml_job.txt .
 RUN pip install --no-cache-dir -r requirements.ml_job.txt
 
 # Copy the entire application source code.
-COPY . .
+#COPY . .
+
+# --- Start: Selective File Copying ---
+# We will copy specific directories and files instead of a blanket "COPY ."
+
+# Copy config files
+COPY config.py .
+
+
+# Copy the app directory, explicitly including only the necessary sub-modules/files
+COPY app/models/ app/models/
+COPY app/schemas/ app/schemas/
+COPY app/services/audio_processor.py app/services/
+COPY app/services/gcs_handler.py app/services/
+COPY app/services/mongodb_handler.py app/services/
+COPY app/services/rabbitmq_client.py app/services/
+
+# Copy the specific monitoring script
+COPY monitoring/ml_batch_processor.py monitoring/
 
 # Set environment variables for temporary local paths within the container.
 ENV LOCAL_TEMP_AUDIO_SEGMENTS_DIR="/tmp/extracted_audio"
 
 # Command to run the ML batch processor script.
-CMD ["python", "monitoring/ml_batch_processor.py"]
+CMD ["python", "-u", "monitoring/ml_batch_processor.py"]
