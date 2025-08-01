@@ -22,7 +22,7 @@ class AudioProcessorService:
     def _load_model(self):
         try:
             print("Loading WavLM model...")
-            self.analyzer = WavLMAudioAnalyzer(force_cpu=True) # Set to True for local testing
+            self.analyzer = WavLMAudioAnalyzer(force_cpu=False) # Set to True for local testing, else False
             print(f"Model loaded successfully on device: {self.analyzer.device}")
         except Exception as e:
             print(f"Error loading model: {str(e)}")
