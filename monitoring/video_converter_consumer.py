@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from config import Config
 load_dotenv()
 
-import json
+#import json
 import time
 from threading import Thread
 from typing import Dict, Any
@@ -16,12 +16,16 @@ from app.schemas.models import ProcessingStatus
 
 class VideoConverterConsumer:
     def __init__(self):
+        """
         self.rabbitmq_client = RabbitMQClient(
             host=Config.RABBITMQ_HOST,
             port=Config.RABBITMQ_PORT,
             user=Config.RABBITMQ_USER,
             password=Config.RABBITMQ_PASS
         )
+        """
+        print(f"RabbitMQClient: Attempting to connect using URL: {Config.RABBITMQ_URL}")
+        self.rabbitmq_client = RabbitMQClient()
         self.video_converter_service = VideoConverterService()
         self.mongodb_handler = MongoDBHandler()
 

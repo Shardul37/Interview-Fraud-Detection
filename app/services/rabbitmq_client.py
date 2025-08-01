@@ -28,6 +28,7 @@ class RabbitMQClient:
         # the full AMQP URL string (e.g., 'amqp://user:pass@host:port/').
         # pika.URLParameters will parse this string into connection parameters.
         self.connection_params = pika.URLParameters(Config.RABBITMQ_URL)
+        self.connection_params.heartbeat = 1800
         self._connection = None
         self._channel = None
         self._consumer_thread: Optional[Thread] = None

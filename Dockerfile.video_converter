@@ -12,6 +12,7 @@ COPY requirements.video_converter.txt .
 
 # Install Python packages.
 RUN pip install --no-cache-dir -r requirements.video_converter.txt
+RUN pip install google-cloud-secret-manager
 
 # --- ADD THIS LINE ---
 ENV PYTHONPATH=/src
@@ -26,12 +27,9 @@ COPY app/schemas/ app/schemas/
 COPY app/services/ app/services/
 COPY monitoring/video_converter_consumer.py monitoring/
 COPY secrets_loader.py . 
-COPY entrypoint.sh .  
 
 # Set environment variables for temporary local paths within the container.
 ENV LOCAL_TEMP_VIDEO_DIR="/tmp/raw_videos"
 ENV LOCAL_TEMP_AUDIO_SEGMENTS_DIR="/tmp/extracted_audio"
-
-ENTRYPOINT ["/src/entrypoint.sh"]
 # Command to run the video converter consumer.
 CMD ["python", "-u", "monitoring/video_converter_consumer.py"]

@@ -1,10 +1,19 @@
 import os
 from dotenv import load_dotenv
 # Load environment variables from .env file at the very start
-load_dotenv()
+#load_dotenv()
+
+try:
+    from secrets_loader import secrets_manager
+    secrets_manager() # Call the function to populate os.environ
+    print("Secrets loaded into environment by config.py import.")
+except Exception as e:
+    print(f"ERROR: Failed to load secrets during config.py import: {e}")
 
 class Config:
+    ENV = os.getenv("ENV", "stag")
     PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "your-gcp-project-id")
+    
     GCS_BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME", "stag_metantz")
     GCS_AUDIO_ROOT_PREFIX = os.environ.get("GCS_AUDIO_ROOT_PREFIX", "shardul_test/test_extracted_audio/")
     GCS_RESULTS_PREFIX = os.environ.get("GCS_RESULTS_PREFIX", "shardul_test/test_json_result/")
@@ -31,11 +40,14 @@ class Config:
     #MONGO_URI = os.environ.get("MONGO_URI", "mongodb://localhost:27017/")
      # RabbitMQ Configurations (now fetched from Secret Manager)
     # Assuming secrets_loader.py sets STAG_RABBITMQ_URL
-    RABBITMQ_URL = os.environ.get(f"{os.getenv('ENV', 'stag').upper()}_RABBITMQ_URL", "amqp://guest:guest@localhost:5672/")
+    RABBITMQ_URL = os.environ.get(f"{ENV}_RABBITMQ_URL") # No default here; it *must* be set by secrets_loader
+    if RABBITMQ_URL is None:
+        raise ValueError(f"Environment variable {ENV}_RABBITMQ_URL not set. Secrets might not have loaded correctly.")
 
-    # MongoDB Configurations (now fetched from Secret Manager)
-    # Assuming secrets_loader.py sets STAG_DATABASE_URL
-    MONGO_URI = os.environ.get(f"{os.getenv('ENV', 'stag').upper()}_DATABASE_URL", "mongodb://localhost:27017/")
+    # MongoDB Configurations - NOW READ DIRECTLY FROM OS.ENVIRON, EXPECTING secrets_loader TO HAVE SET THEM
+    MONGO_URI = os.environ.get(f"{ENV}_DATABASE_URL") # No default here; it *must* be set by secrets_loader
+    if MONGO_URI is None:
+        raise ValueError(f"Environment variable {ENV}_DATABASE_URL not set. Secrets might not have loaded correctly.")
     MONGO_DB_NAME = os.environ.get("MONGO_DB_NAME", "Cheating-Results")
     MONGO_COLLECTION_INTERVIEWS = os.environ.get("MONGO_COLLECTION_INTERVIEWS", "Result")
 
