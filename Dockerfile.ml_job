@@ -42,7 +42,7 @@ COPY app/services/rabbitmq_client.py app/services/
 
 # Copy the specific monitoring script
 COPY monitoring/ml_batch_processor.py monitoring/
-COPY secrets_loader.py .    
+COPY secrets_manager.py .    
 
 # Set environment variables for temporary local paths within the container.
 ENV LOCAL_TEMP_AUDIO_SEGMENTS_DIR="/tmp/extracted_audio"

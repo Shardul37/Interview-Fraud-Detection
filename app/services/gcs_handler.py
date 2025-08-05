@@ -68,6 +68,41 @@ class GCSHandler:
             
         return downloaded_paths
 
+    
+    def upload_folder_to_gcs(self, local_folder_path: str, gcs_folder_prefix: str) -> List[str]:
+        """
+        Upload an entire local folder to GCS with the given prefix.
+        Returns list of uploaded GCS file paths.
+        """
+        if not os.path.isdir(local_folder_path):
+            raise ValueError(f"Local folder does not exist or is not a directory: {local_folder_path}")
+        
+        uploaded_paths = []
+        
+        # Ensure gcs_folder_prefix ends with '/'
+        if not gcs_folder_prefix.endswith('/'):
+            gcs_folder_prefix += '/'
+        
+        # Walk through all files in the local folder
+        for root, dirs, files in os.walk(local_folder_path):
+            for file in files:
+                local_file_path = os.path.join(root, file)
+                # Calculate relative path from the base folder
+                relative_path = os.path.relpath(local_file_path, local_folder_path)
+                # Convert to forward slashes for GCS
+                relative_path = relative_path.replace('\\', '/')
+                gcs_file_path = gcs_folder_prefix + relative_path
+                
+                try:
+                    self.upload_file(local_file_path, gcs_file_path)
+                    uploaded_paths.append(gcs_file_path)
+                    print(f"Uploaded {local_file_path} to gs://{self.bucket_name}/{gcs_file_path}")
+                except Exception as e:
+                    print(f"Error uploading {local_file_path}: {e}")
+                    raise
+        
+        return uploaded_paths
+    
     def delete_folder_by_prefix(self, gcs_folder_prefix: str):
         blobs_to_delete = self.storage_client.list_blobs(self.bucket_name, prefix=gcs_folder_prefix)
         

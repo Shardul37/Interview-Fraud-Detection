@@ -26,7 +26,7 @@ COPY config.py .
 COPY app/schemas/ app/schemas/
 COPY app/services/ app/services/
 COPY monitoring/video_converter_consumer.py monitoring/
-COPY secrets_loader.py . 
+COPY secrets_manager.py . 
 
 # Set environment variables for temporary local paths within the container.
 ENV LOCAL_TEMP_VIDEO_DIR="/tmp/raw_videos"

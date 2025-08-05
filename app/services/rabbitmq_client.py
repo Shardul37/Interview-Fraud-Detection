@@ -6,27 +6,9 @@ from typing import Callable, Optional, Dict, Any
 from config import Config
 
 class RabbitMQClient:
-    """
-    def __init__(self, host=Config.RABBITMQ_HOST, port=Config.RABBITMQ_PORT, user=Config.RABBITMQ_USER, password=Config.RABBITMQ_PASS):
-        self.credentials = pika.PlainCredentials(user, password)
-        self.connection_params = pika.ConnectionParameters(
-            host=host,
-            port=port,
-            credentials=self.credentials,
-            heartbeat=600
-        )
-        print(f"DEBUG: Attempting to connect to RabbitMQ at {host}:{port} with user {user}")
-        
-        self._connection = None
-        self._channel = None
-        self._consumer_thread: Optional[Thread] = None
-        self._is_consuming = False
-        self._connect() # Connect on init
-    """
+
     def __init__(self):
-        # We now rely entirely on Config.RABBITMQ_URL which will contain
-        # the full AMQP URL string (e.g., 'amqp://user:pass@host:port/').
-        # pika.URLParameters will parse this string into connection parameters.
+
         self.connection_params = pika.URLParameters(Config.RABBITMQ_URL)
         self.connection_params.heartbeat = 1800
         self._connection = None

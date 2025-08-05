@@ -3,9 +3,7 @@ from dotenv import load_dotenv
 from config import Config
 load_dotenv()
 
-#import json
 import time
-from threading import Thread
 from typing import Dict, Any
 import pika
 

@@ -24,9 +24,8 @@ class ProcessingHistoryEntry(BaseModel):
     video_gcs_path: Optional[str] = None
     audio_gcs_prefix: Optional[str] = None
     batch_id: Optional[str] = None
-    # If you later want to store mini-batch details
-    # processed_segments: Optional[List[int]] = None
 
+#The SegmentResult and InterviewResult models are not used.
 class SegmentResult(BaseModel):
     segment_no: int
     reading_cosine: float
@@ -39,21 +38,9 @@ class InterviewResult(BaseModel):
     final_verdict: str
     cheating_segments: int
     total_segments: int
-    # Removed json_file_path and embeddings_file_path as results are in DB
     processed_at: str
     processing_time_seconds: Optional[float] = None
     segments_details: List[SegmentResult]
     
     # NEW: Add history directly to InterviewResult model (reflects DB structure)
     history: List[ProcessingHistoryEntry] = []
-
-# This ProcessingResponse might primarily be used for API endpoints
-# which are now removed for the ML cron job but still relevant for video conversion service if it had an API.
-# Keeping it for consistency in case you re-introduce an API or for other status checks.
-class ProcessingResponse(BaseModel):
-    success: bool
-    interview_id: str
-    result: Optional[InterviewResult] = None
-    message: str
-    processing_time: Optional[float] = None
-    status: ProcessingStatus = ProcessingStatus.QUEUED

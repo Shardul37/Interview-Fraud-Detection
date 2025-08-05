@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 #load_dotenv()
 
 try:
-    from secrets_loader import secrets_manager
+    from secrets_manager import secrets_manager
     secrets_manager() # Call the function to populate os.environ
     print("Secrets loaded into environment by config.py import.")
 except Exception as e:
@@ -16,15 +16,10 @@ class Config:
     
     GCS_BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME", "stag_metantz")
     GCS_AUDIO_ROOT_PREFIX = os.environ.get("GCS_AUDIO_ROOT_PREFIX", "shardul_test/test_extracted_audio/")
-    GCS_RESULTS_PREFIX = os.environ.get("GCS_RESULTS_PREFIX", "shardul_test/test_json_result/")
+    #GCS_RESULTS_PREFIX = os.environ.get("GCS_RESULTS_PREFIX", "shardul_test/test_json_result/")
     GCS_EMBEDDINGS_PREFIX = os.environ.get("GCS_EMBEDDINGS_PREFIX", "shardul_test/test_embeddings/")
 
-    # RabbitMQ Configurations
-    RABBITMQ_HOST = os.environ.get("RABBITMQ_HOST", "localhost")
-    RABBITMQ_PORT = int(os.environ.get("RABBITMQ_PORT", 5672))
-    RABBITMQ_USER = os.environ.get("RABBITMQ_USER", "guest")
-    RABBITMQ_PASS = os.environ.get("RABBITMQ_PASS", "guest")
-    #These 4 varibles are no longer used
+    # RabbitMQ Configuration
     RABBITMQ_PROCESSING_QUEUE = os.environ.get("RABBITMQ_PROCESSING_QUEUE", "INTERVIEW_PROCESSING_QUEUE_SHARDULTEST") # This is now RabbitMQ2 for ML
     RABBITMQ_VIDEO_READY_QUEUE = os.environ.get("RABBITMQ_VIDEO_READY_QUEUE", "VIDEO_READY_QUEUE_SHARDULTEST") # This is RabbitMQ1 for Video Converter
 
@@ -35,19 +30,21 @@ class Config:
 
     LOCAL_TEMP_VIDEO_DIR = os.environ.get("LOCAL_TEMP_VIDEO_DIR", "/tmp/raw_videos")
     LOCAL_TEMP_AUDIO_SEGMENTS_DIR = os.environ.get("LOCAL_TEMP_AUDIO_SEGMENTS_DIR", "/tmp/extracted_audio")
+    LOCAL_TEMP_EMBEDDINGS_DIR = os.environ.get("LOCAL_TEMP_EMBEDDINGS_DIR", "/tmp/embeddings")
     
     # MongoDB Configurations
     #MONGO_URI = os.environ.get("MONGO_URI", "mongodb://localhost:27017/")
      # RabbitMQ Configurations (now fetched from Secret Manager)
-    # Assuming secrets_loader.py sets STAG_RABBITMQ_URL
-    RABBITMQ_URL = os.environ.get(f"{ENV}_RABBITMQ_URL") # No default here; it *must* be set by secrets_loader
+    # Assuming secrets_manager.py sets STAG_RABBITMQ_URL
+    RABBITMQ_URL = os.environ.get(f"{ENV}_RABBITMQ_URL") # No default here; it *must* be set by secrets_manager
     if RABBITMQ_URL is None:
         raise ValueError(f"Environment variable {ENV}_RABBITMQ_URL not set. Secrets might not have loaded correctly.")
 
-    # MongoDB Configurations - NOW READ DIRECTLY FROM OS.ENVIRON, EXPECTING secrets_loader TO HAVE SET THEM
-    MONGO_URI = os.environ.get(f"{ENV}_DATABASE_URL") # No default here; it *must* be set by secrets_loader
+    # MongoDB Configurations - NOW READ DIRECTLY FROM OS.ENVIRON, EXPECTING secrets_manager TO HAVE SET THEM
+    MONGO_URI = os.environ.get(f"{ENV}_DATABASE_URL") # No default here; it *must* be set by secrets_manager
     if MONGO_URI is None:
         raise ValueError(f"Environment variable {ENV}_DATABASE_URL not set. Secrets might not have loaded correctly.")
+    
     MONGO_DB_NAME = os.environ.get("MONGO_DB_NAME", "Cheating-Results")
     MONGO_COLLECTION_INTERVIEWS = os.environ.get("MONGO_COLLECTION_INTERVIEWS", "Result")
 
@@ -58,13 +55,11 @@ class Config:
     MAX_INTERVIEW_SEGMENTS_PER_MODEL_PASS = int(os.environ.get("MAX_INTERVIEW_SEGMENTS_PER_MODEL_PASS", 1))
 
     MIN_EXPECTED_INTERVIEW_SEGMENTS = int(os.environ.get("MIN_EXPECTED_INTERVIEW_SEGMENTS", 1))
+    
+    # Model Configuration
+    # Set to True for CPU-only inference (local testing), False to use GPU if available
+    FORCE_CPU_MODEL = os.environ.get("FORCE_CPU_MODEL", "True").lower() in ("true", "1", "yes")
 
     REFERENCE_NATURAL_FILE = "reference_natural.wav"
     REFERENCE_READING_FILE = "reference_reading.wav"
     SEGMENT_FILE_PREFIX = "segment_"
-
-    # These are for the old QueueMonitor, but keeping them if other parts rely on Config.
-    # Not directly used by the new ml_batch_processor in its current form.
-    GPU_TRIGGER_THRESHOLD = int(os.environ.get("GPU_TRIGGER_THRESHOLD", 3))
-    GPU_POLLING_INTERVAL = int(os.environ.get("GPU_POLLING_INTERVAL", 5))
-    GPU_POLLING_TIMEOUT = int(os.environ.get("GPU_POLLING_TIMEOUT", 300))

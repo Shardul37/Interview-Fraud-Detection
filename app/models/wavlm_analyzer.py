@@ -15,7 +15,7 @@ import time
 from config import Config
 
 class WavLMAudioAnalyzer:
-    def __init__(self, force_cpu: bool = False):
+    def __init__(self, force_cpu: bool):
         try:
             print("Loading WavLM model...")
             self.feature_extractor = Wav2Vec2FeatureExtractor.from_pretrained("microsoft/wavlm-base-plus")
@@ -56,7 +56,7 @@ class WavLMAudioAnalyzer:
             print(f"Error loading {filepath}: {str(e)}")
             return None
     
-    def extract_embeddings(self, filepaths: List[str]) -> Tuple[torch.Tensor, List[str]]:
+    def extract_embeddings(self, filepaths: List[str], save_to_dir: Optional[str] = None) -> Tuple[torch.Tensor, List[str]]:
         waveforms = []
         valid_files = []
         
@@ -77,6 +77,18 @@ class WavLMAudioAnalyzer:
                 outputs = self.model(**inputs)
             
             embeddings = outputs.last_hidden_state.mean(dim=1)
+            
+            # Save embeddings locally if save_to_dir is provided
+            if save_to_dir:
+                os.makedirs(save_to_dir, exist_ok=True)
+                for i, filepath in enumerate(valid_files):
+                    filename = os.path.basename(filepath)
+                    # Convert .wav to .pt for embedding filename
+                    embedding_filename = filename.replace('.wav', '.pt')
+                    embedding_path = os.path.join(save_to_dir, embedding_filename)
+                    # Save individual embedding as .pt file
+                    torch.save(embeddings[i].cpu(), embedding_path)
+                    print(f"Saved embedding: {embedding_path}")
             
             if self.device == "cuda":
                 torch.cuda.empty_cache()
@@ -104,6 +116,9 @@ class WavLMAudioAnalyzer:
         if not segment_files:
             print(f"No regular segment files found in {interview_folder}. Only processing references.")
         
+        # Create embeddings directory for this interview
+        embeddings_dir = os.path.join(Config.LOCAL_TEMP_EMBEDDINGS_DIR, interview_id)
+        
         # Extract embeddings for reference files
         ref_embeddings, _ = self.extract_embeddings([natural_file, reading_file])
         natural_embedding = ref_embeddings[0]
@@ -130,8 +145,8 @@ class WavLMAudioAnalyzer:
             # Combine references with current batch of interview segments for model inference
             files_for_batch_inference = [natural_file, reading_file] + current_segment_batch_files
             
-            # Extract embeddings for the current batch
-            batch_embeddings, batch_valid_files = self.extract_embeddings(files_for_batch_inference)
+            # Extract embeddings for the current batch and save them locally
+            batch_embeddings, batch_valid_files = self.extract_embeddings(files_for_batch_inference, save_to_dir=embeddings_dir)
             
             # The first two embeddings are always natural and reading references from this batch
             # We already have their embeddings extracted earlier, this re-extraction is okay for small batches
@@ -184,7 +199,8 @@ class WavLMAudioAnalyzer:
             # Removed file_paths as per new design
             "processed_at": datetime.now().isoformat(),
             "processing_time_seconds": round(processing_duration_seconds, 2),
-            "segments_details": segments_details_list
+            "segments_details": segments_details_list,
+            "local_embeddings_dir": embeddings_dir
         }
         
         return analysis_results

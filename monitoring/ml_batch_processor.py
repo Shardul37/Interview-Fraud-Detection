@@ -1,17 +1,13 @@
 from dotenv import load_dotenv
 load_dotenv() # Load env variables for config
 
-import json
-import time
-from typing import Dict, Any, Callable
+from typing import Dict, Any
 import pika
 import asyncio
 
 from app.services.audio_processor import AudioProcessorService
 from app.services.rabbitmq_client import RabbitMQClient
-from app.services.mongodb_handler import MongoDBHandler # Ensure this is imported for clean shutdown
 from config import Config
-from app.schemas.models import ProcessingStatus
 
 async def process_single_message_async(message_data: Dict[str, Any], channel: pika.adapters.blocking_connection.BlockingChannel, method: pika.spec.Basic.Deliver, properties: pika.spec.BasicProperties, audio_service: AudioProcessorService):
     """

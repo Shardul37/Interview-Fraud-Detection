@@ -41,6 +41,7 @@ Dockerfile.ml_job
 # =================================================================
 #app/models/           # Contains wavlm_analyzer.py and potentially downloaded model weights
 #monitoring/ml_batch_processor.py # The script for the ML cron job
-monitoring/simulate_video_ready_producer.py # The script for simulating video messages
+# The script for simulating video messages
+monitoring/simulate_video_ready_producer.py 
 
 

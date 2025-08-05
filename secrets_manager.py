@@ -1,4 +1,4 @@
-# secrets_loader.py (modified)
+# secrets_manager.py (modified)
 import os
 from dotenv import load_dotenv
 from google.cloud import secretmanager

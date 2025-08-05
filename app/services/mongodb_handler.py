@@ -1,6 +1,6 @@
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure, OperationFailure
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 from datetime import datetime
 from config import Config
 from app.schemas.models import ProcessingStatus, ProcessingHistoryEntry
@@ -112,11 +112,12 @@ class MongoDBHandler:
             print(f"Error storing results for {interview_id}: {e}")
             raise
 
+    """
     def get_unprocessed_interviews_for_batch(self, limit: int) -> List[str]:
-        """
-        Fetches a list of interview_ids that are in AUDIO_EXTRACTED_QUEUED or FAILED state,
-        suitable for forming a new batch for ML processing.
-        """
+        
+        #Fetches a list of interview_ids that are in AUDIO_EXTRACTED_QUEUED or FAILED state,
+        #suitable for forming a new batch for ML processing.
+        
         try:
             cursor = self.collection.find(
                 {"status": {"$in": [
@@ -132,6 +133,7 @@ class MongoDBHandler:
         except Exception as e:
             print(f"Error fetching unprocessed interviews: {e}")
             return []
+    """
 
     def close(self): # Renamed from cleanup to close for clarity
         if self.client:

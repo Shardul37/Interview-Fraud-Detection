@@ -1,16 +1,13 @@
 import os
-import torch
-import tempfile
 import shutil
-from typing import Dict, Any, Tuple, List, Optional
-from datetime import datetime
-import time
+from typing import Optional
+
 
 from app.models.wavlm_analyzer import WavLMAudioAnalyzer
 from app.services.gcs_handler import GCSHandler
 from app.services.mongodb_handler import MongoDBHandler
 from config import Config
-from app.schemas.models import ProcessingStatus, InterviewResult, ProcessingHistoryEntry
+from app.schemas.models import ProcessingStatus
 
 class AudioProcessorService:
     def __init__(self):
@@ -22,7 +19,7 @@ class AudioProcessorService:
     def _load_model(self):
         try:
             print("Loading WavLM model...")
-            self.analyzer = WavLMAudioAnalyzer(force_cpu=False) # Set to True for local testing, else False
+            self.analyzer = WavLMAudioAnalyzer(force_cpu=Config.FORCE_CPU_MODEL)
             print(f"Model loaded successfully on device: {self.analyzer.device}")
         except Exception as e:
             print(f"Error loading model: {str(e)}")
@@ -87,8 +84,26 @@ class AudioProcessorService:
                 interview_local_dir, interview_id
             )
             
+            # Upload embeddings to GCS if local embeddings directory exists
+            local_embeddings_dir = analysis_results.get("local_embeddings_dir")
+            embeddings_gcs_prefix = None
+            
+            if local_embeddings_dir and os.path.exists(local_embeddings_dir):
+                embeddings_gcs_prefix = f"{Config.GCS_EMBEDDINGS_PREFIX}{interview_id}/"
+                try:
+                    uploaded_embedding_paths = self.gcs_handler.upload_folder_to_gcs(
+                        local_embeddings_dir, embeddings_gcs_prefix
+                    )
+                    print(f"Uploaded {len(uploaded_embedding_paths)} embeddings to GCS for {interview_id}")
+                except Exception as e:
+                    print(f"Warning: Failed to upload embeddings for {interview_id}: {e}")
+                    # Don't fail the entire process if embedding upload fails
+            
             # Update MongoDB with results and COMPLETED status (including the full segments_details)
-            # Removed embeddings_gcs_path and json_gcs_path as per new design
+            # Include embeddings GCS path if available
+            if embeddings_gcs_prefix:
+                analysis_results["embeddings_gcs_prefix"] = embeddings_gcs_prefix
+            
             self.mongodb_handler.store_processing_results(
                 interview_id, analysis_results
             )
@@ -103,7 +118,8 @@ class AudioProcessorService:
                 actor="ml_batch_processor",
                 message="ML inference completed successfully.",
                 batch_id=batch_id,
-                processing_time_seconds=analysis_results.get("processing_time_seconds")
+                processing_time_seconds=analysis_results.get("processing_time_seconds"),
+                embeddings_gcs_prefix=embeddings_gcs_prefix
             )
 
         except Exception as e:
@@ -123,7 +139,13 @@ class AudioProcessorService:
             # Clean up the individual interview's local directory after processing
             if interview_local_dir and os.path.exists(interview_local_dir):
                 shutil.rmtree(interview_local_dir)
-                print(f"Cleaned up local directory: {interview_local_dir}")
+                print(f"Cleaned up local audio directory: {interview_local_dir}")
+            
+            # Clean up the local embeddings directory after processing
+            embeddings_dir = os.path.join(Config.LOCAL_TEMP_EMBEDDINGS_DIR, interview_id)
+            if os.path.exists(embeddings_dir):
+                shutil.rmtree(embeddings_dir)
+                print(f"Cleaned up local embeddings directory: {embeddings_dir}")
     
     def is_model_loaded(self) -> bool:
         return self.analyzer is not None
