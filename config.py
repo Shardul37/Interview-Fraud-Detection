@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 # Load environment variables from .env file at the very start
-#load_dotenv()
+load_dotenv()
 
 try:
     from secrets_manager import secrets_manager

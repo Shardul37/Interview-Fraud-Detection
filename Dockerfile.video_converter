@@ -22,6 +22,7 @@ ENV PYTHONPATH=/src
 
 # Copy config files
 COPY config.py .
+COPY .env .
 # Copy the app directory, explicitly including only the necessary sub-modules/files
 COPY app/schemas/ app/schemas/
 COPY app/services/ app/services/

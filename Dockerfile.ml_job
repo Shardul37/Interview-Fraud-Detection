@@ -30,6 +30,7 @@ RUN pip install --no-cache-dir -r requirements.ml_job.txt
 
 # Copy config files
 COPY config.py .
+COPY .env .
 
 
 # Copy the app directory, explicitly including only the necessary sub-modules/files
