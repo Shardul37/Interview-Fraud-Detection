@@ -1,3 +1,4 @@
+import sys
 from dotenv import load_dotenv
 load_dotenv() # Load env variables for config
 
@@ -73,6 +74,8 @@ def run_ml_batch_processing():
             # audio_service.cleanup() will also close the MongoDB client
             audio_service.cleanup() 
         print("ML Batch Processor finished. Resources cleaned up.")
+        print("All tasks completed. Exiting now.")
+        sys.exit(0) # Add this to force a clean exit
 
 if __name__ == "__main__":
     run_ml_batch_processing()
