@@ -78,7 +78,7 @@ def secrets_manager():
         if secret_value is not None:
             os.environ[key] = secret_value
             secret_list.append(key)
-            print(f"DEBUG: Loaded secret into environment: {key}={os.environ[key][:15]}...") # Print first 15 chars for security
+            #print(f"DEBUG: Loaded secret into environment: {key}={os.environ[key][:15]}...") # Print first 15 chars for security
 
     # Handle environment-dependent keys
     for key in env_dependent_keys:
