@@ -127,7 +127,7 @@ Document shape (representative)
         "segment_no": 1,
         "reading_cosine": 0.1234,
         "natural_cosine": 0.5678,
-        "verdict": "Reading|Natural",
+        "verdict": "Natural",
         "processed_at": "2025-01-01T12:35:00.000"
       }....
     ],
